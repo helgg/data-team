@@ -1,0 +1,33 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!environments/*.tfvars
+!*.example.tfvars
+.terraform.lock.hcl
+crash.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+
+# Secrets / local
+.env
+.env.*
+*.pem
+*.key
+
+# Claude Code local
+.claude/settings.local.json
+
+# IDE / OS
+.vscode/settings.json
+.idea/
+.DS_Store

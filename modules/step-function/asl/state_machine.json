@@ -1,0 +1,20 @@
+{
+  "Comment": "Placeholder state machine - replace with actual workflow",
+  "StartAt": "Step1",
+  "States": {
+    "Step1": {
+      "Type": "Pass",
+      "Result": {
+        "status": "step1_complete"
+      },
+      "Next": "Step2"
+    },
+    "Step2": {
+      "Type": "Pass",
+      "Result": {
+        "status": "step2_complete"
+      },
+      "End": true
+    }
+  }
+}
