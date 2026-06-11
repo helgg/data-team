@@ -15,7 +15,7 @@ resource "aws_sfn_state_machine" "this" {
   role_arn = var.step_function_role_arn
   type     = "STANDARD"
 
-  definition = templatefile("${path.module}/asl/state_machine.json", {})
+  definition = templatefile(var.asl_file_path, {})
 
   logging_configuration {
     log_destination        = "${aws_cloudwatch_log_group.this.arn}:*"

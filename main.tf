@@ -1,6 +1,7 @@
 module "step_function" {
   source = "./modules/step-function"
 
+  asl_file_path          = "${path.root}/asl/${var.step_function_name}.json"
   name                   = "${local.name_prefix}-${var.step_function_name}"
   environment            = var.environment
   step_function_role_arn = var.step_function_role_arn

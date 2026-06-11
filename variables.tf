@@ -56,7 +56,7 @@ variable "state_bucket_name" {
 }
 
 variable "step_function_name" {
-  description = "Name identifier for the Step Functions state machine"
+  description = "Name identifier for the Step Functions state machine. Must match filename in asl/<name>.json"
   type        = string
   default     = "orchestrator"
 }

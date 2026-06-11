@@ -70,6 +70,11 @@ variable "enable_alarms" {
   default     = true
 }
 
+variable "asl_file_path" {
+  description = "Absolute path to the ASL JSON file for this state machine"
+  type        = string
+}
+
 variable "common_tags" {
   description = "Map of mandatory tags applied to all resources"
   type        = map(string)
