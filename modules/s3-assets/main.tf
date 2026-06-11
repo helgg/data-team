@@ -45,6 +45,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "assets" {
     id     = "transition-to-ia"
     status = "Enabled"
 
+    filter {}
+
     transition {
       days          = var.lifecycle_transition_days
       storage_class = "STANDARD_IA"
@@ -54,6 +56,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "assets" {
   rule {
     id     = "expire-noncurrent-versions"
     status = "Enabled"
+
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 90
