@@ -1,22 +1,213 @@
 {
-  "Comment": "Replace with actual workflow. Template vars available: ${glue_database_name}, ${glue_table_name}, ${s3_input_path}, ${s3_output_path}. IMPORTANT: escape Step Functions JSONPath $.field as $${field} to avoid Terraform templatefile conflicts.",
-  "StartAt": "Step1",
+  "Comment": "P1 -> P2 -> Parallel(P3, P4) -> Final.Success (otimizado com Map/JSONata)",
+  "QueryLanguage": "JSONata",
+  "StartAt": "Init.Pipelines",
   "States": {
-    "Step1": {
+    "Init.Pipelines": {
       "Type": "Pass",
-      "Result": {
-        "database": "${glue_database_name}",
-        "table": "${glue_table_name}",
-        "input_path": "${s3_input_path}"
+      "Comment": "Inicializa configuracao dos 2 pipelines (SOT e SPEC)",
+      "Assign": {
+        "BUCKET": "${bucket}",
+        "Pipelines": [
+          {
+            "Name": "Pipeline 1 - ${pipeline_1_table}",
+            "DB": "${glue_db}",
+            "TABLE_NAME": "${pipeline_1_table}",
+            "GLUE": {
+              "JobName": "${glue_main_job_name}",
+              "Arguments": {
+                "--DB": "${glue_db}",
+                "--TABLE_NAME": "${pipeline_1_table}",
+                "--PATH_SQL_ORIGEM": "s3://${bucket}/SQL_CENTER/${pipeline_1_table}.sql",
+                "--REGION_NAME": "${region_name}",
+                "--PARTITION_NAME": "${partition_name}",
+                "--PARTITION_TYPE": "${partition_type}",
+                "--OWNER": "${owner_email}",
+                "--JOB_NAME": "${glue_main_job_name}",
+                "--REPROCESSAMENTO": "${reprocessamento}",
+                "--RANGE_REPROCESSAMENTO": "${range_reprocessamento}",
+                "--DEFASAGEM": "${defasagem}",
+                "--IGNORE_PARTITIONS_TB_NAME": "${ignore_partitions_tb_name}",
+                "--MEMBERS": "${members}",
+                "--GROUP_NAME": "${group_name}"
+              }
+            }
+          },
+          {
+            "Name": "Pipeline 2 - ${pipeline_2_table}",
+            "DB": "${glue_db}",
+            "TABLE_NAME": "${pipeline_2_table}",
+            "GLUE": {
+              "JobName": "${glue_main_job_name}",
+              "Arguments": {
+                "--DB": "${glue_db}",
+                "--TABLE_NAME": "${pipeline_2_table}",
+                "--PATH_SQL_ORIGEM": "s3://${bucket}/SQL_CENTER/${pipeline_2_table}.sql",
+                "--REGION_NAME": "${region_name}",
+                "--PARTITION_NAME": "${partition_name}",
+                "--PARTITION_TYPE": "${partition_type}",
+                "--OWNER": "${owner_email}",
+                "--JOB_NAME": "${glue_main_job_name}",
+                "--REPROCESSAMENTO": "${reprocessamento}",
+                "--RANGE_REPROCESSAMENTO": "${range_reprocessamento}",
+                "--DEFASAGEM": "${defasagem}",
+                "--IGNORE_PARTITIONS_TB_NAME": "${ignore_partitions_tb_name}",
+                "--MEMBERS": "${members}",
+                "--GROUP_NAME": "${group_name}"
+              }
+            }
+          }
+        ]
       },
-      "Next": "Step2"
+      "Next": "Pipelines.Map"
     },
-    "Step2": {
-      "Type": "Pass",
-      "Result": {
-        "status": "step2_complete"
+    "Pipelines.Map": {
+      "Type": "Map",
+      "Comment": "Executa o mesmo fluxo para cada pipeline (SOT e SPEC)",
+      "Items": "{%% $Pipelines %}",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "INLINE"
+        },
+        "StartAt": "Pipeline.SetContext",
+        "States": {
+          "Pipeline.SetContext": {
+            "Type": "Pass",
+            "Comment": "Expande configuracao do item atual para variaveis globais do fluxo",
+            "Assign": {
+              "DB": "{%% $states.input.DB %}",
+              "TABLE_NAME": "{%% $states.input.TABLE_NAME %}",
+              "GLUE": "{%% $states.input.GLUE %}"
+            },
+            "Next": "Heimdall.StartJobRun"
+          },
+          "Heimdall.StartJobRun": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Arguments": {
+              "JobName": "${glue_heimdall_job_name}",
+              "Arguments": "{%% $GLUE.Arguments %}"
+            },
+            "Assign": {
+              "GLUE": "{%% $GLUE %}",
+              "DB": "{%% $DB %}",
+              "TABLE_NAME": "{%% $TABLE_NAME %}"
+            },
+            "Output": "{%% $states.input %}",
+            "Next": "Heimdall.Report.CheckFileExists"
+          },
+          "Heimdall.Report.CheckFileExists": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+            "Arguments": {
+              "Bucket": "{%% $BUCKET %}",
+              "Key": "{%% $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/temp.html' %}"
+            },
+            "Assign": {
+              "GLUE": "{%% $GLUE %}",
+              "DB": "{%% $DB %}",
+              "TABLE_NAME": "{%% $TABLE_NAME %}"
+            },
+            "Next": "Hermes.StartJobRun",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "S3.NoSuchKeyException",
+                  "S3.NotFound",
+                  "S3.NoSuchKey",
+                  "S3.S3Exception",
+                  "States.TaskFailed"
+                ],
+                "Next": "GlueMain.StartJobRun"
+              }
+            ]
+          },
+          "Hermes.StartJobRun": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Arguments": {
+              "JobName": "${glue_hermes_job_name}",
+              "Arguments": "{%% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/' }]) %}"
+            },
+            "Next": "Fail.Execution"
+          },
+          "Fail.Execution": {
+            "Type": "Fail",
+            "Error": "HEIMDALL_REPORT_FOUND",
+            "Cause": "{%% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado. Hermes acionado.' %}"
+          },
+          "GlueMain.StartJobRun": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Arguments": {
+              "JobName": "{%% $GLUE.JobName %}",
+              "Arguments": "{%% $GLUE.Arguments %}"
+            },
+            "Assign": {
+              "GLUE": "{%% $GLUE %}",
+              "DB": "{%% $DB %}",
+              "TABLE_NAME": "{%% $TABLE_NAME %}"
+            },
+            "Output": "{%% $states.input %}",
+            "Next": "GlueMain.Report.CheckFileExists"
+          },
+          "GlueMain.Report.CheckFileExists": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
+            "Arguments": {
+              "Bucket": "{%% $BUCKET %}",
+              "Key": "{%% $DB & '/' & $TABLE_NAME & '/reports/temp/temp.html' %}"
+            },
+            "Assign": {
+              "GLUE": "{%% $GLUE %}",
+              "DB": "{%% $DB %}",
+              "TABLE_NAME": "{%% $TABLE_NAME %}"
+            },
+            "Next": "GlueMain.Hermes.StartJobRun",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "S3.NoSuchKeyException",
+                  "S3.NotFound",
+                  "S3.NoSuchKey",
+                  "S3.S3Exception",
+                  "States.TaskFailed"
+                ],
+                "Next": "Pipeline.Success"
+              }
+            ]
+          },
+          "GlueMain.Hermes.StartJobRun": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Arguments": {
+              "JobName": "${glue_hermes_job_name}",
+              "Arguments": "{%% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/reports/temp/' }]) %}"
+            },
+            "Next": "GlueMain.Fail"
+          },
+          "GlueMain.Fail": {
+            "Type": "Fail",
+            "Error": "HEIMDALL_REPORT_FOUND_AFTER_GLUEMAIN",
+            "Cause": "{%% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado apos GlueMain.' %}"
+          },
+          "Pipeline.Success": {
+            "Type": "Succeed"
+          }
+        }
       },
-      "End": true
+      "Next": "GLue.RepairTableCompartilado"
+    },
+    "GLue.RepairTableCompartilado": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Arguments": {
+        "JobName": "${glue_repair_job_name}"
+      },
+      "Next": "Final.Success"
+    },
+    "Final.Success": {
+      "Type": "Succeed"
     }
   }
 }

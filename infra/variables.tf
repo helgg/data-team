@@ -43,6 +43,26 @@ variable "state_machines" {
     s3_input_path       = optional(string, "")
     s3_output_path      = optional(string, "")
     schedule_expression = optional(string, "cron(0 6 * * ? *)")
+
+    # ASL template variables — injected into templatefile() for orchestrator.json
+    bucket                    = optional(string, "")
+    glue_db                   = optional(string, "")
+    pipeline_1_table          = optional(string, "")
+    pipeline_2_table          = optional(string, "")
+    glue_main_job_name        = optional(string, "")
+    glue_heimdall_job_name    = optional(string, "")
+    glue_hermes_job_name      = optional(string, "")
+    glue_repair_job_name      = optional(string, "")
+    region_name               = optional(string, "")
+    partition_name            = optional(string, "")
+    partition_type            = optional(string, "")
+    owner_email               = optional(string, "")
+    members                   = optional(string, "")
+    group_name                = optional(string, "")
+    reprocessamento           = optional(string, "true")
+    range_reprocessamento     = optional(string, "7")
+    defasagem                 = optional(string, "1")
+    ignore_partitions_tb_name = optional(string, "")
   }))
 }
 
@@ -103,3 +123,4 @@ variable "alarm_sns_topic_arn" {
   type        = string
   default     = ""
 }
+
