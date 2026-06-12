@@ -9,6 +9,13 @@ Este repositório define um time de agentes para desenvolvimento de infraestrutu
 - O techleader nunca implementa: ele planeja, delega, valida quality gates e consolida.
 - Subagentes não compartilham contexto entre si: toda delegação deve incluir contexto, tarefa, critério de aceite, restrições e formato de saída.
 
+## Estrutura de pastas (OBRIGATÓRIO)
+
+- **Todo código gerado por agentes vai dentro de `infra/`** — Terraform, módulos, ASL, SQL, Python libs, docs técnicos.
+- A raiz do repositório deve conter apenas: `CLAUDE.md`, `README.md`, `.gitignore` e a pasta `infra/`.
+- Comandos `terraform` são sempre executados a partir de `infra/` (ex: `cd infra && terraform validate`).
+- Ao criar novos projetos ou expandir infra existente, criar subpastas dentro de `infra/` se necessário.
+
 ## Padrões globais do projeto (valem para TODOS os agentes)
 
 - **Idioma**: respostas e documentação em português (pt-BR); código, nomes de recursos e comentários técnicos em inglês.
