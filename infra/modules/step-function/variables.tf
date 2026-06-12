@@ -75,6 +75,12 @@ variable "asl_file_path" {
   type        = string
 }
 
+variable "asl_template_vars" {
+  description = "Variables injected into the ASL templatefile (e.g. glue_database_name, glue_table_name, s3_input_path, s3_output_path). Use $${...} in ASL to escape Step Functions JSONPath dollar signs."
+  type        = any
+  default     = {}
+}
+
 variable "common_tags" {
   description = "Map of mandatory tags applied to all resources"
   type        = map(string)

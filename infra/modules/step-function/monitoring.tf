@@ -1,7 +1,7 @@
 locals {
-  alarm_actions          = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
-  state_machine_name     = aws_sfn_state_machine.this.name
-  glue_rule_name         = aws_cloudwatch_event_rule.glue_partition.name
+  alarm_actions      = var.alarm_sns_topic_arn != "" ? [var.alarm_sns_topic_arn] : []
+  state_machine_name = aws_sfn_state_machine.this.name
+  glue_rule_name     = aws_cloudwatch_event_rule.glue_partition.name
 }
 
 resource "aws_cloudwatch_metric_alarm" "executions_failed" {

@@ -30,19 +30,20 @@ variable "cost_center" {
 }
 
 variable "step_function_role_arn" {
-  description = "ARN of the pre-existing IAM execution role for Step Functions"
+  description = "ARN of the pre-existing IAM execution role for Step Functions (shared across all state machines)"
   type        = string
   sensitive   = true
 }
 
-variable "glue_database_name" {
-  description = "Glue Data Catalog database name to monitor for partition creation"
-  type        = string
-}
-
-variable "glue_table_name" {
-  description = "Glue Data Catalog table name to monitor for partition creation"
-  type        = string
+variable "state_machines" {
+  description = "Map of state machines to create. Key must match the ASL filename: asl/<key>.json"
+  type = map(object({
+    glue_database_name  = string
+    glue_table_name     = string
+    s3_input_path       = optional(string, "")
+    s3_output_path      = optional(string, "")
+    schedule_expression = optional(string, "cron(0 6 * * ? *)")
+  }))
 }
 
 variable "assets_bucket_name" {
@@ -55,22 +56,10 @@ variable "state_bucket_name" {
   type        = string
 }
 
-variable "step_function_name" {
-  description = "Name identifier for the Step Functions state machine. Must match filename in asl/<name>.json"
-  type        = string
-  default     = "orchestrator"
-}
-
 variable "log_retention_days" {
   description = "Number of days to retain CloudWatch logs"
   type        = number
   default     = 30
-}
-
-variable "schedule_expression" {
-  description = "EventBridge cron expression for the fallback scheduled trigger"
-  type        = string
-  default     = "cron(0 6 * * ? *)"
 }
 
 variable "sql_s3_prefix" {

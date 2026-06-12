@@ -1,11 +1,13 @@
 {
-  "Comment": "Placeholder state machine - replace with actual workflow",
+  "Comment": "Replace with actual workflow. Template vars available: ${glue_database_name}, ${glue_table_name}, ${s3_input_path}, ${s3_output_path}. IMPORTANT: escape Step Functions JSONPath $.field as $${field} to avoid Terraform templatefile conflicts.",
   "StartAt": "Step1",
   "States": {
     "Step1": {
       "Type": "Pass",
       "Result": {
-        "status": "step1_complete"
+        "database": "${glue_database_name}",
+        "table": "${glue_table_name}",
+        "input_path": "${s3_input_path}"
       },
       "Next": "Step2"
     },
