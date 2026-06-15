@@ -31,3 +31,7 @@ dist/
 .vscode/settings.json
 .idea/
 .DS_Store
+
+# Template examples (local only)
+template.tf
+uso_do_template.tf
