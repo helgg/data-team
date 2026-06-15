@@ -9,7 +9,7 @@ module "step_function" {
   glue_database_name     = each.value.glue_database_name
   glue_table_name        = each.value.glue_table_name
   schedule_expression    = each.value.schedule_expression
-  asl_template_vars      = each.value
+  asl_template_vars      = merge(each.value, { account_id = data.aws_caller_identity.current.account_id })
   log_retention_days     = var.log_retention_days
   kms_key_arn            = var.kms_key_arn
   include_execution_data = var.include_execution_data
