@@ -11,15 +11,15 @@ locals {
 
   assets_bucket_name = "${var.assets_bucket_name}-${data.aws_caller_identity.current.account_id}"
 
-  # Auto-discovery: any *.json dropped in stepfunctions/ becomes a state machine
+  # Auto-discovery: todo *.json em stepfunctions/ vira uma state machine
   stepfunction_files = fileset("${path.module}/stepfunctions", "*.json")
   stepfunctions      = { for f in local.stepfunction_files : trimsuffix(f, ".json") => f }
 
-  # Auto-discovery: any *.json dropped in trigger/ becomes an EventBridge rule
+  # Auto-discovery: todo *.json em trigger/ vira uma regra EventBridge
   trigger_files = fileset("${path.module}/trigger", "*.json")
   triggers      = { for f in local.trigger_files : trimsuffix(f, ".json") => jsondecode(file("${path.module}/trigger/${f}")) }
 
-  # Global ASL template variables — injected into every templatefile() call
+  # Variáveis globais injetadas em cada templatefile()
   asl_vars = {
     account_id                = data.aws_caller_identity.current.account_id
     bucket                    = var.bucket

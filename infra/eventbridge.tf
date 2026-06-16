@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# IAM Role — EventBridge → Step Functions (least privilege)
+# IAM Role — EventBridge → Step Functions
 # ---------------------------------------------------------------------------
 
 data "aws_iam_policy_document" "eventbridge_sf_trust" {
@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "eventbridge_sf_trust" {
 
 resource "aws_iam_role" "eventbridge_sf" {
   name               = "${local.name_prefix}-eventbridge-sf"
-  description        = "Allows EventBridge scheduled rules to start Step Functions executions"
+  description        = "Permite ao EventBridge iniciar execuções do Step Functions"
   assume_role_policy = data.aws_iam_policy_document.eventbridge_sf_trust.json
   tags               = local.common_tags
 }
@@ -44,14 +44,14 @@ resource "aws_iam_role_policy" "eventbridge_sf" {
 }
 
 # ---------------------------------------------------------------------------
-# EventBridge Rules — one per trigger JSON dropped in trigger/
+# Regras EventBridge — uma por JSON em trigger/
 # ---------------------------------------------------------------------------
 
 resource "aws_cloudwatch_event_rule" "this" {
   for_each = local.triggers
 
   name                = "${local.name_prefix}-${each.key}"
-  description         = "Scheduled trigger for Step Functions state machine ${each.key}"
+  description         = "Trigger agendado para a state machine ${each.key}"
   schedule_expression = each.value.schedule_expression
   event_bus_name      = "default"
   tags                = local.common_tags

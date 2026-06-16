@@ -1,10 +1,10 @@
 variable "bucket_name" {
-  description = "Name of the existing S3 bucket to upload assets to"
+  description = "bucket S3 destino dos assets"
   type        = string
 }
 
 variable "environment" {
-  description = "Deployment environment (dev or prod)"
+  description = "ambiente (dev ou prod)"
   type        = string
 
   validation {
@@ -14,41 +14,41 @@ variable "environment" {
 }
 
 variable "sql_assets_path" {
-  description = "Local filesystem path containing SQL files to upload"
+  description = "caminho local dos arquivos SQL"
   type        = string
 }
 
 variable "python_assets_path" {
-  description = "Local filesystem path containing Python files to upload"
+  description = "caminho local dos arquivos Python"
   type        = string
 }
 
 variable "s3_common_prefix" {
-  description = "Root S3 key prefix shared by all uploaded assets (must end with /)"
+  description = "prefixo S3 comum (deve terminar com /)"
   type        = string
   default     = "assets/"
 }
 
 variable "sql_s3_prefix" {
-  description = "S3 sub-prefix for SQL files, appended after s3_common_prefix"
+  description = "sub-prefixo S3 para SQL"
   type        = string
   default     = "sql/"
 }
 
 variable "python_s3_prefix" {
-  description = "S3 sub-prefix for Python files, appended after s3_common_prefix"
+  description = "sub-prefixo S3 para Python"
   type        = string
   default     = "python/"
 }
 
 variable "kms_key_arn" {
-  description = "ARN of the KMS CMK for object encryption. Empty string uses SSE-S3 (AES256)."
+  description = "ARN da KMS CMK (vazio = SSE-S3/AES256)"
   type        = string
   default     = ""
 }
 
 variable "common_tags" {
-  description = "Map of tags to apply to all S3 objects"
+  description = "tags dos objetos S3"
   type        = map(string)
   default     = {}
 }

@@ -1,11 +1,11 @@
 variable "aws_region" {
-  description = "AWS region for all resources"
+  description = "região AWS dos recursos"
   type        = string
   default     = "us-east-1"
 }
 
 variable "environment" {
-  description = "Deployment environment (dev or prod)"
+  description = "ambiente de deploy (dev ou prod)"
   type        = string
 
   validation {
@@ -15,190 +15,190 @@ variable "environment" {
 }
 
 variable "project" {
-  description = "Project name used as a prefix for all resource names"
+  description = "nome do projeto (prefixo dos recursos)"
   type        = string
 }
 
 variable "owner" {
-  description = "Team or squad responsible for the resources"
+  description = "squad responsável pelos recursos"
   type        = string
 }
 
 variable "cost_center" {
-  description = "Cost center identifier for billing allocation"
+  description = "centro de custo"
   type        = string
 }
 
 variable "step_function_role_arn" {
-  description = "ARN of the pre-existing IAM execution role for Step Functions (shared across all state machines)"
+  description = "ARN da role IAM de execução do Step Functions"
   type        = string
   sensitive   = true
 }
 
 # ---------------------------------------------------------------------------
-# ASL global template variables — injected into every templatefile() call
+# Variáveis globais do template ASL
 # ---------------------------------------------------------------------------
 
 variable "bucket" {
-  description = "S3 bucket name used as the primary data lake bucket in ASL templates"
+  description = "bucket S3 principal (data lake)"
   type        = string
   default     = ""
 }
 
 variable "glue_db" {
-  description = "AWS Glue database name referenced in ASL templates"
+  description = "database Glue"
   type        = string
   default     = ""
 }
 
 variable "pipeline_1_table" {
-  description = "Glue table name for pipeline 1, referenced in ASL templates"
+  description = "tabela Glue do pipeline 1"
   type        = string
   default     = ""
 }
 
 variable "pipeline_2_table" {
-  description = "Glue table name for pipeline 2, referenced in ASL templates"
+  description = "tabela Glue do pipeline 2"
   type        = string
   default     = ""
 }
 
 variable "glue_main_job_name" {
-  description = "Name of the main Glue ETL job referenced in ASL templates"
+  description = "job Glue principal"
   type        = string
   default     = ""
 }
 
 variable "glue_heimdall_job_name" {
-  description = "Name of the Heimdall Glue job referenced in ASL templates"
+  description = "job Glue Heimdall"
   type        = string
   default     = ""
 }
 
 variable "glue_hermes_job_name" {
-  description = "Name of the Hermes Glue job referenced in ASL templates"
+  description = "job Glue Hermes"
   type        = string
   default     = ""
 }
 
 variable "glue_repair_job_name" {
-  description = "Name of the repair Glue job referenced in ASL templates"
+  description = "job Glue de repair"
   type        = string
   default     = ""
 }
 
 variable "region_name" {
-  description = "AWS region name passed as a parameter in ASL templates"
+  description = "nome da região AWS"
   type        = string
   default     = ""
 }
 
 variable "partition_name" {
-  description = "Partition column name used in ASL templates"
+  description = "coluna de partição"
   type        = string
   default     = ""
 }
 
 variable "partition_type" {
-  description = "Partition type (e.g. date, string) used in ASL templates"
+  description = "tipo de partição"
   type        = string
   default     = ""
 }
 
 variable "owner_email" {
-  description = "Email address of the pipeline owner, used for notifications in ASL templates"
+  description = "email do owner do pipeline"
   type        = string
   default     = ""
 }
 
 variable "members" {
-  description = "Comma-separated list of team member emails for notifications in ASL templates"
+  description = "emails do time (separados por vírgula)"
   type        = string
   default     = ""
 }
 
 variable "group_name" {
-  description = "Group or squad name used in ASL templates"
+  description = "nome do grupo/squad"
   type        = string
   default     = ""
 }
 
 variable "reprocessamento" {
-  description = "Flag indicating whether reprocessing is enabled in ASL templates"
+  description = "habilita reprocessamento"
   type        = string
   default     = "true"
 }
 
 variable "range_reprocessamento" {
-  description = "Number of days for reprocessing window in ASL templates"
+  description = "janela de reprocessamento (dias)"
   type        = string
   default     = "7"
 }
 
 variable "defasagem" {
-  description = "Lag in days applied during processing in ASL templates"
+  description = "defasagem em dias"
   type        = string
   default     = "1"
 }
 
 variable "ignore_partitions_tb_name" {
-  description = "Table name used to look up partitions to ignore in ASL templates"
+  description = "tabela de partições a ignorar"
   type        = string
   default     = ""
 }
 
 variable "assets_bucket_name" {
-  description = "Base name for the S3 assets bucket (SQL and Python files)"
+  description = "nome base do bucket de assets"
   type        = string
 }
 
 variable "state_bucket_name" {
-  description = "Name of the S3 bucket used for Terraform state (created by bootstrap)"
+  description = "bucket do estado Terraform"
   type        = string
 }
 
 variable "sql_s3_prefix" {
-  description = "S3 key prefix for uploaded SQL files"
+  description = "prefixo S3 para arquivos SQL"
   type        = string
   default     = "sql/"
 }
 
 variable "python_s3_prefix" {
-  description = "S3 key prefix for uploaded Python files"
+  description = "prefixo S3 para arquivos Python"
   type        = string
   default     = "python/"
 }
 
 variable "deployment_alias" {
-  description = "Step Functions deployment alias name. If null, no alias is created"
+  description = "alias do Step Functions (null = sem alias)"
   type        = string
   default     = null
 }
 
 variable "owner_team_email" {
-  description = "Email of the owner team"
+  description = "email do time owner"
   type        = string
 }
 
 variable "tech_team_email" {
-  description = "Email of the technical team"
+  description = "email do time técnico"
   type        = string
 }
 
 variable "github_repo_id" {
-  description = "GitHub repository ID for tagging purposes"
+  description = "ID do repositório GitHub (tag)"
   type        = string
   default     = "GITHUB_REPOSITORY_TAG_PLACEHOLDER"
 }
 
 variable "github_repo_name" {
-  description = "GitHub repository name for tagging purposes"
+  description = "nome do repositório GitHub (tag)"
   type        = string
   default     = "GITHUB_REPOSITORY_TAG_PLACEHOLDER"
 }
 
 variable "s3_common_prefix" {
-  description = "Common S3 key prefix shared by SQL and Python assets (must end with /)"
+  description = "prefixo S3 comum para assets (deve terminar com /)"
   type        = string
   default     = "assets/"
 }
