@@ -1,22 +1,18 @@
-module "step_function" {
-  for_each = var.state_machines
-  source   = "./modules/step-function"
+module "state_machine" {
+  source   = "git::https://github.com/itau-corp/itau-ei3-modules-terraform-stepfunctions.git?ref=v2.3.1"
+  for_each = local.stepfunctions
 
-  asl_file_path          = "${path.root}/asl/${each.key}.json"
-  name                   = "${local.name_prefix}-${each.key}"
-  environment            = var.environment
-  step_function_role_arn = var.step_function_role_arn
-  glue_database_name     = each.value.glue_database_name
-  glue_table_name        = each.value.glue_table_name
-  schedule_expression    = each.value.schedule_expression
-  asl_template_vars      = merge(each.value, { account_id = data.aws_caller_identity.current.account_id })
-  log_retention_days     = var.log_retention_days
-  kms_key_arn            = var.kms_key_arn
-  include_execution_data = var.include_execution_data
-  log_level              = var.log_level
-  enable_alarms          = var.enable_alarms
-  alarm_sns_topic_arn    = var.alarm_sns_topic_arn
-  common_tags            = local.common_tags
+  state_machine_name         = "${local.name_prefix}-${each.key}"
+  state_machine_iam_role_arn = var.step_function_role_arn
+  state_machine_log_level    = var.environment == "prod" ? "ERROR" : "ALL"
+  state_machine_type         = "STANDARD"
+  state_machine_definition   = templatefile("${path.module}/stepfunctions/${each.key}.json", local.asl_vars)
+  owner_team_email           = var.owner_team_email
+  tech_team_email            = var.tech_team_email
+  github_repo_id             = var.github_repo_id
+  github_repo_name           = var.github_repo_name
+  deployment_alias           = var.deployment_alias
+  tags                       = local.common_tags
 }
 
 module "s3_assets" {
@@ -24,8 +20,9 @@ module "s3_assets" {
 
   bucket_name        = local.assets_bucket_name
   environment        = var.environment
-  sql_assets_path    = "${path.root}/sql"
-  python_assets_path = "${path.root}/lib/python"
+  sql_assets_path    = "${path.root}/sql-scripts"
+  python_assets_path = "${path.root}/python-lib"
+  s3_common_prefix   = var.s3_common_prefix
   sql_s3_prefix      = var.sql_s3_prefix
   python_s3_prefix   = var.python_s3_prefix
   common_tags        = local.common_tags

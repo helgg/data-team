@@ -7,53 +7,53 @@
       "Type": "Pass",
       "Comment": "Inicializa configuracao dos 2 pipelines (SOT e SPEC)",
       "Assign": {
-        "BUCKET": "${bucket}",
+        "BUCKET": "itau-self-wkp-sa-east-1-${account_id}",
         "Pipelines": [
           {
-            "Name": "Pipeline 1 - ${pipeline_1_table}",
-            "DB": "${glue_db}",
-            "TABLE_NAME": "${pipeline_1_table}",
+            "Name": "Pipeline 1 - sepj_sot_ga4_perfis_operadores",
+            "DB": "workspace_db",
+            "TABLE_NAME": "sepj_sot_ga4_perfis_operadores",
             "GLUE": {
-              "JobName": "${glue_main_job_name}",
+              "JobName": "Yggdra",
               "Arguments": {
-                "--DB": "${glue_db}",
-                "--TABLE_NAME": "${pipeline_1_table}",
-                "--PATH_SQL_ORIGEM": "s3://${bucket}/SQL_CENTER/${pipeline_1_table}.sql",
-                "--REGION_NAME": "${region_name}",
-                "--PARTITION_NAME": "${partition_name}",
-                "--PARTITION_TYPE": "${partition_type}",
-                "--OWNER": "${owner_email}",
-                "--JOB_NAME": "${glue_main_job_name}",
-                "--REPROCESSAMENTO": "${reprocessamento}",
-                "--RANGE_REPROCESSAMENTO": "${range_reprocessamento}",
-                "--DEFASAGEM": "${defasagem}",
-                "--IGNORE_PARTITIONS_TB_NAME": "${ignore_partitions_tb_name}",
-                "--MEMBERS": "${members}",
-                "--GROUP_NAME": "${group_name}"
+                "--DB": "workspace_db",
+                "--TABLE_NAME": "sepj_sot_ga4_perfis_operadores",
+                "--PATH_SQL_ORIGEM": "s3://itau-self-wkp-sa-east-1-${account_id}/SQL_CENTER/sepj_sot_ga4_perfis_operadores.sql",
+                "--REGION_NAME": "sa-east-1",
+                "--PARTITION_NAME": "anomesdia",
+                "--PARTITION_TYPE": "anomesdia",
+                "--OWNER": "",
+                "--JOB_NAME": "Yggdra",
+                "--REPROCESSAMENTO": "true",
+                "--RANGE_REPROCESSAMENTO": "7",
+                "--DEFASAGEM": "1",
+                "--IGNORE_PARTITIONS_TB_NAME": "tb_depara_funis",
+                "--MEMBERS": "",
+                "--GROUP_NAME": "Yggdra_Hermes_DD"
               }
             }
           },
           {
-            "Name": "Pipeline 2 - ${pipeline_2_table}",
-            "DB": "${glue_db}",
-            "TABLE_NAME": "${pipeline_2_table}",
+            "Name": "Pipeline 2 - sepj_spec_ga4_perfis_operadores_analitica",
+            "DB": "workspace_db",
+            "TABLE_NAME": "sepj_spec_ga4_perfis_operadores_analitica",
             "GLUE": {
-              "JobName": "${glue_main_job_name}",
+              "JobName": "Yggdra",
               "Arguments": {
-                "--DB": "${glue_db}",
-                "--TABLE_NAME": "${pipeline_2_table}",
-                "--PATH_SQL_ORIGEM": "s3://${bucket}/SQL_CENTER/${pipeline_2_table}.sql",
-                "--REGION_NAME": "${region_name}",
-                "--PARTITION_NAME": "${partition_name}",
-                "--PARTITION_TYPE": "${partition_type}",
-                "--OWNER": "${owner_email}",
-                "--JOB_NAME": "${glue_main_job_name}",
-                "--REPROCESSAMENTO": "${reprocessamento}",
-                "--RANGE_REPROCESSAMENTO": "${range_reprocessamento}",
-                "--DEFASAGEM": "${defasagem}",
-                "--IGNORE_PARTITIONS_TB_NAME": "${ignore_partitions_tb_name}",
-                "--MEMBERS": "${members}",
-                "--GROUP_NAME": "${group_name}"
+                "--DB": "workspace_db",
+                "--TABLE_NAME": "sepj_spec_ga4_perfis_operadores_analitica",
+                "--PATH_SQL_ORIGEM": "s3://itau-self-wkp-sa-east-1-${account_id}/SQL_CENTER/sepj_spec_ga4_perfis_operadores_analitica.sql",
+                "--REGION_NAME": "sa-east-1",
+                "--PARTITION_NAME": "anomesdia",
+                "--PARTITION_TYPE": "anomesdia",
+                "--OWNER": "",
+                "--JOB_NAME": "Yggdra",
+                "--REPROCESSAMENTO": "true",
+                "--RANGE_REPROCESSAMENTO": "7",
+                "--DEFASAGEM": "1",
+                "--IGNORE_PARTITIONS_TB_NAME": "tb_depara_funis",
+                "--MEMBERS": "",
+                "--GROUP_NAME": "Yggdra_Hermes_DD"
               }
             }
           }
@@ -64,7 +64,7 @@
     "Pipelines.Map": {
       "Type": "Map",
       "Comment": "Executa o mesmo fluxo para cada pipeline (SOT e SPEC)",
-      "Items": "{%% $Pipelines %}",
+      "Items": "{% $Pipelines %}",
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "INLINE"
@@ -75,9 +75,9 @@
             "Type": "Pass",
             "Comment": "Expande configuracao do item atual para variaveis globais do fluxo",
             "Assign": {
-              "DB": "{%% $states.input.DB %}",
-              "TABLE_NAME": "{%% $states.input.TABLE_NAME %}",
-              "GLUE": "{%% $states.input.GLUE %}"
+              "DB": "{% $states.input.DB %}",
+              "TABLE_NAME": "{% $states.input.TABLE_NAME %}",
+              "GLUE": "{% $states.input.GLUE %}"
             },
             "Next": "Heimdall.StartJobRun"
           },
@@ -85,28 +85,28 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::glue:startJobRun.sync",
             "Arguments": {
-              "JobName": "${glue_heimdall_job_name}",
-              "Arguments": "{%% $GLUE.Arguments %}"
+              "JobName": "YGGDRA - Heimdall",
+              "Arguments": "{% $GLUE.Arguments %}"
             },
             "Assign": {
-              "GLUE": "{%% $GLUE %}",
-              "DB": "{%% $DB %}",
-              "TABLE_NAME": "{%% $TABLE_NAME %}"
+              "GLUE": "{% $GLUE %}",
+              "DB": "{% $DB %}",
+              "TABLE_NAME": "{% $TABLE_NAME %}"
             },
-            "Output": "{%% $states.input %}",
+            "Output": "{% $states.input %}",
             "Next": "Heimdall.Report.CheckFileExists"
           },
           "Heimdall.Report.CheckFileExists": {
             "Type": "Task",
             "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
             "Arguments": {
-              "Bucket": "{%% $BUCKET %}",
-              "Key": "{%% $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/temp.html' %}"
+              "Bucket": "{% $BUCKET %}",
+              "Key": "{% $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/temp.html' %}"
             },
             "Assign": {
-              "GLUE": "{%% $GLUE %}",
-              "DB": "{%% $DB %}",
-              "TABLE_NAME": "{%% $TABLE_NAME %}"
+              "GLUE": "{% $GLUE %}",
+              "DB": "{% $DB %}",
+              "TABLE_NAME": "{% $TABLE_NAME %}"
             },
             "Next": "Hermes.StartJobRun",
             "Catch": [
@@ -126,42 +126,42 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::glue:startJobRun.sync",
             "Arguments": {
-              "JobName": "${glue_hermes_job_name}",
-              "Arguments": "{%% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/' }]) %}"
+              "JobName": "Yggdra_Hermes",
+              "Arguments": "{% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/' }]) %}"
             },
             "Next": "Fail.Execution"
           },
           "Fail.Execution": {
             "Type": "Fail",
             "Error": "HEIMDALL_REPORT_FOUND",
-            "Cause": "{%% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado. Hermes acionado.' %}"
+            "Cause": "{% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado. Hermes acionado.' %}"
           },
           "GlueMain.StartJobRun": {
             "Type": "Task",
             "Resource": "arn:aws:states:::glue:startJobRun.sync",
             "Arguments": {
-              "JobName": "{%% $GLUE.JobName %}",
-              "Arguments": "{%% $GLUE.Arguments %}"
+              "JobName": "{% $GLUE.JobName %}",
+              "Arguments": "{% $GLUE.Arguments %}"
             },
             "Assign": {
-              "GLUE": "{%% $GLUE %}",
-              "DB": "{%% $DB %}",
-              "TABLE_NAME": "{%% $TABLE_NAME %}"
+              "GLUE": "{% $GLUE %}",
+              "DB": "{% $DB %}",
+              "TABLE_NAME": "{% $TABLE_NAME %}"
             },
-            "Output": "{%% $states.input %}",
+            "Output": "{% $states.input %}",
             "Next": "GlueMain.Report.CheckFileExists"
           },
           "GlueMain.Report.CheckFileExists": {
             "Type": "Task",
             "Resource": "arn:aws:states:::aws-sdk:s3:headObject",
             "Arguments": {
-              "Bucket": "{%% $BUCKET %}",
-              "Key": "{%% $DB & '/' & $TABLE_NAME & '/reports/temp/temp.html' %}"
+              "Bucket": "{% $BUCKET %}",
+              "Key": "{% $DB & '/' & $TABLE_NAME & '/reports/temp/temp.html' %}"
             },
             "Assign": {
-              "GLUE": "{%% $GLUE %}",
-              "DB": "{%% $DB %}",
-              "TABLE_NAME": "{%% $TABLE_NAME %}"
+              "GLUE": "{% $GLUE %}",
+              "DB": "{% $DB %}",
+              "TABLE_NAME": "{% $TABLE_NAME %}"
             },
             "Next": "GlueMain.Hermes.StartJobRun",
             "Catch": [
@@ -181,15 +181,15 @@
             "Type": "Task",
             "Resource": "arn:aws:states:::glue:startJobRun.sync",
             "Arguments": {
-              "JobName": "${glue_hermes_job_name}",
-              "Arguments": "{%% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/reports/temp/' }]) %}"
+              "JobName": "Yggdra_Hermes",
+              "Arguments": "{% $merge([$GLUE.Arguments, { '--PREFIX_TEMP': $DB & '/' & $TABLE_NAME & '/heimdall/reports/temp/' }]) %}"
             },
             "Next": "GlueMain.Fail"
           },
           "GlueMain.Fail": {
             "Type": "Fail",
             "Error": "HEIMDALL_REPORT_FOUND_AFTER_GLUEMAIN",
-            "Cause": "{%% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado apos GlueMain.' %}"
+            "Cause": "{% 'Pipeline para tabela ' & $TABLE_NAME & ' - temp.html encontrado apos GlueMain.' %}"
           },
           "Pipeline.Success": {
             "Type": "Succeed"
@@ -202,7 +202,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Arguments": {
-        "JobName": "${glue_repair_job_name}"
+        "JobName": "repair_table_perfis_operadores_iam"
       },
       "Next": "Final.Success"
     },

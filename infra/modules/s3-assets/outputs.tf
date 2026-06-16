@@ -1,24 +1,11 @@
-output "bucket_arn" {
-  description = "ARN of the assets S3 bucket"
-  value       = aws_s3_bucket.assets.arn
-}
-
-output "bucket_name" {
-  description = "Name of the assets S3 bucket"
-  value       = aws_s3_bucket.assets.id
-}
-
-output "bucket_id" {
-  description = "ID of the assets S3 bucket"
-  value       = aws_s3_bucket.assets.id
-}
-
-output "sql_objects_keys" {
-  description = "S3 keys of all uploaded SQL files"
+output "uploaded_sql_keys" {
+  description = "List of S3 object keys uploaded from the SQL assets path"
   value       = [for obj in aws_s3_object.sql : obj.key]
+  sensitive   = true
 }
 
-output "python_objects_keys" {
-  description = "S3 keys of all uploaded Python files"
+output "uploaded_python_keys" {
+  description = "List of S3 object keys uploaded from the Python assets path"
   value       = [for obj in aws_s3_object.python : obj.key]
+  sensitive   = true
 }

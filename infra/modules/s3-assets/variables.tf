@@ -1,11 +1,16 @@
 variable "bucket_name" {
-  description = "Name of the S3 bucket for SQL and Python assets"
+  description = "Name of the existing S3 bucket to upload assets to"
   type        = string
 }
 
 variable "environment" {
   description = "Deployment environment (dev or prod)"
   type        = string
+
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "environment must be 'dev' or 'prod'."
+  }
 }
 
 variable "sql_assets_path" {
@@ -18,31 +23,32 @@ variable "python_assets_path" {
   type        = string
 }
 
+variable "s3_common_prefix" {
+  description = "Root S3 key prefix shared by all uploaded assets (must end with /)"
+  type        = string
+  default     = "assets/"
+}
+
 variable "sql_s3_prefix" {
-  description = "S3 key prefix for SQL files"
+  description = "S3 sub-prefix for SQL files, appended after s3_common_prefix"
   type        = string
   default     = "sql/"
 }
 
 variable "python_s3_prefix" {
-  description = "S3 key prefix for Python files"
+  description = "S3 sub-prefix for Python files, appended after s3_common_prefix"
   type        = string
-  default     = "lib/python/"
+  default     = "python/"
 }
 
-variable "versioning_enabled" {
-  description = "Enable S3 versioning on the assets bucket"
-  type        = bool
-  default     = true
-}
-
-variable "lifecycle_transition_days" {
-  description = "Days after which objects transition to STANDARD_IA storage class"
-  type        = number
-  default     = 90
+variable "kms_key_arn" {
+  description = "ARN of the KMS CMK for object encryption. Empty string uses SSE-S3 (AES256)."
+  type        = string
+  default     = ""
 }
 
 variable "common_tags" {
-  description = "Map of mandatory tags applied to all resources"
+  description = "Map of tags to apply to all S3 objects"
   type        = map(string)
+  default     = {}
 }
