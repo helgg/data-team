@@ -27,3 +27,8 @@ output "python_objects_keys" {
   description = "S3 keys of all uploaded Python files"
   value       = module.s3_assets.python_objects_keys
 }
+
+output "eventbridge_rule_arns" {
+  description = "ARNs of all EventBridge rules that trigger Step Functions, keyed by trigger name"
+  value       = { for k, r in aws_cloudwatch_event_rule.this : k => r.arn }
+}

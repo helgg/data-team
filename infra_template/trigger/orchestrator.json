@@ -1,0 +1,3 @@
+{
+  "schedule_expression": "cron(0 6 * * ? *)"
+}

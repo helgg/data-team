@@ -2,8 +2,7 @@
 **/.terraform/
 *.tfstate
 *.tfstate.*
-*.tfvars
-# !environments/*.tfvars
+*.tfvars                      # inclui infra_template/environments/*.tfvars — nunca commitar valores reais
 # !*.example.tfvars
 .terraform.lock.hcl
 crash.log
@@ -35,3 +34,4 @@ dist/
 # Template examples (local only)
 template.tf
 uso_do_template.tf
+IMAGENS

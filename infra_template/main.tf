@@ -1,12 +1,12 @@
 module "state_machine" {
   source   = "git::https://github.com/itau-corp/itau-ei3-modules-terraform-stepfunctions.git?ref=v2.3.1"
-  for_each = var.state_machines
+  for_each = local.stepfunctions
 
   state_machine_name         = "${local.name_prefix}-${each.key}"
   state_machine_iam_role_arn = var.step_function_role_arn
   state_machine_log_level    = var.environment == "prod" ? "ERROR" : "ALL"
   state_machine_type         = "STANDARD"
-  state_machine_definition   = templatefile("${path.module}/stepfunctions/${each.key}.json", each.value)
+  state_machine_definition   = templatefile("${path.module}/stepfunctions/${each.key}.json", local.asl_vars)
   owner_team_email           = var.owner_team_email
   tech_team_email            = var.tech_team_email
   github_repo_id             = var.github_repo_id
