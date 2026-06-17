@@ -1,5 +1,5 @@
 module "state_machine" {
-  source   = "git::https://github.com/itau-corp/itau-ei3-modules-terraform-stepfunctions.git?ref=v2.3.1"
+  source   = "./modules/stepfunctions"
   for_each = local.stepfunctions
 
   state_machine_name         = "${local.name_prefix}-${each.key}"
