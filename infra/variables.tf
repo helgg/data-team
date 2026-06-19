@@ -63,30 +63,6 @@ variable "pipeline_2_table" {
   default     = ""
 }
 
-variable "glue_main_job_name" {
-  description = "job Glue principal"
-  type        = string
-  default     = ""
-}
-
-variable "glue_heimdall_job_name" {
-  description = "job Glue Heimdall"
-  type        = string
-  default     = ""
-}
-
-variable "glue_hermes_job_name" {
-  description = "job Glue Hermes"
-  type        = string
-  default     = ""
-}
-
-variable "glue_repair_job_name" {
-  description = "job Glue de repair"
-  type        = string
-  default     = ""
-}
-
 variable "region_name" {
   description = "nome da região AWS"
   type        = string
@@ -201,4 +177,179 @@ variable "s3_common_prefix" {
   description = "prefixo S3 comum para assets (deve terminar com /)"
   type        = string
   default     = "assets/"
+}
+
+# ---------------------------------------------------------------------------
+# Glue jobs — auto-discovery via app/src/*.py (ver locals.tf e main.tf)
+# ---------------------------------------------------------------------------
+
+variable "glue_jobs" {
+  description = "configuração dos jobs Glue, chaveada pelo nome lógico (normalmente igual ao nome do arquivo .py em app/src/, sem extensão). O nome real do job AWS vem sempre do campo glue_job_name, nunca da chave do map. Os nomes dos campos espelham os argumentos do módulo remoto itau-cw5-modules-glue//modules/glue_job (ref v0.0.2)."
+  type = map(object({
+    glue_job_name                = string
+    script_file                  = string # arquivo .py em app/src/, ex: "main.py"
+    glue_job_description         = optional(string, "")
+    source_database              = string
+    source_table                 = string
+    conversion_mode              = string
+    save_method                  = string # mapeado para o argumento real "--save_mothod" (typo do contrato original, preservado)
+    columns_list                 = optional(string, "")
+    partition_columns            = optional(string, "")
+    sample_size                  = optional(string, "")
+    workgroup                    = string
+    glue_job_glue_version        = optional(string, "4.0")
+    glue_job_max_retries         = optional(number, 0)
+    glue_job_timeout             = optional(number, 60)
+    glue_job_worker_type         = string
+    glue_job_number_of_workers   = number
+    glue_job_execution_class     = optional(string) # null = usa var.glue_job_execution_class
+    glue_job_run_queuing_enabled = optional(bool)   # null = usa var.glue_job_run_queuing_enabled
+    enable_glue_job              = optional(bool)   # null = usa var.enable_glue_job
+    extra_arguments              = optional(map(string), {})
+    tags                         = optional(map(string), {})
+  }))
+  default = {}
+
+  validation {
+    condition     = alltrue([for k, v in var.glue_jobs : contains(["CTAS", "INSERT_INTO", "MERGE", "OVERWRITE"], v.conversion_mode)])
+    error_message = "conversion_mode deve ser um dos valores suportados pelo módulo glue_job: CTAS, INSERT_INTO, MERGE ou OVERWRITE."
+  }
+}
+
+variable "glue_source_bucket_name" {
+  description = "nome base do bucket S3 de origem (source) usado pelos jobs Glue"
+  type        = string
+  default     = ""
+}
+
+variable "glue_stage_bucket_name" {
+  description = "nome base do bucket S3 de stage (intermediário) usado pelos jobs Glue"
+  type        = string
+  default     = ""
+}
+
+variable "glue_backup_bucket_name" {
+  description = "nome base do bucket S3 de backup usado pelos jobs Glue"
+  type        = string
+  default     = ""
+}
+
+variable "glue_target_bucket_name" {
+  description = "nome base do bucket S3 de destino (target) usado pelos jobs Glue"
+  type        = string
+  default     = ""
+}
+
+variable "athena_output_bucket" {
+  description = "nome base do bucket S3 de resultados de queries Athena"
+  type        = string
+  default     = ""
+}
+
+# ---------------------------------------------------------------------------
+# Glue — KMS security configuration e connection (recursos compartilhados)
+# ---------------------------------------------------------------------------
+
+variable "enable_kms_key" {
+  description = "habilita a criação da chave KMS compartilhada dos jobs Glue"
+  type        = bool
+  default     = true
+}
+
+variable "deletion_window_in_days" {
+  description = "janela de deleção da chave KMS (dias)"
+  type        = number
+  default     = 30
+}
+
+variable "enable_key_rotation" {
+  description = "habilita rotação automática da chave KMS"
+  type        = bool
+  default     = true
+}
+
+variable "enable_kms_alias" {
+  description = "habilita a criação de alias para a chave KMS"
+  type        = bool
+  default     = true
+}
+
+variable "key_alias" {
+  description = "alias da chave KMS (default: alias/<name_prefix>-glue se vazio)"
+  type        = string
+  default     = ""
+}
+
+variable "enable_glue_security_configuration" {
+  description = "habilita a security configuration compartilhada do Glue"
+  type        = bool
+  default     = true
+}
+
+variable "glue_security_configuration_name" {
+  description = "nome da security configuration do Glue (default composto via name_prefix se vazio)"
+  type        = string
+  default     = ""
+}
+
+variable "enable_glue_connection" {
+  description = "habilita a connection do Glue compartilhada entre todos os jobs"
+  type        = bool
+  default     = true
+}
+
+variable "glue_connection_name" {
+  description = "nome da connection do Glue (default composto via name_prefix se vazio)"
+  type        = string
+  default     = ""
+}
+
+variable "glue_connection_description" {
+  description = "descrição da connection do Glue"
+  type        = string
+  default     = "Conexão Glue compartilhada entre os jobs do pipeline"
+}
+
+variable "glue_connection_connection_type" {
+  description = "tipo da connection do Glue (ex: NETWORK, JDBC)"
+  type        = string
+  default     = "NETWORK"
+}
+
+variable "availability_zone" {
+  description = "availability zone usada pela connection do Glue"
+  type        = string
+}
+
+# ---------------------------------------------------------------------------
+# Glue — defaults globais dos jobs (podem ser sobrescritos por job em glue_jobs)
+# ---------------------------------------------------------------------------
+
+variable "enable_glue_job" {
+  description = "habilita os jobs Glue por padrão (sobrescrito por job via glue_jobs[].enable_glue_job)"
+  type        = bool
+  default     = true
+}
+
+variable "glue_job_execution_class" {
+  description = "classe de execução padrão dos jobs Glue (STANDARD ou FLEX)"
+  type        = string
+  default     = "STANDARD"
+}
+
+variable "glue_job_run_queuing_enabled" {
+  description = "habilita enfileiramento de execuções por padrão para os jobs Glue"
+  type        = bool
+  default     = false
+}
+
+variable "repository_name" {
+  description = "nome do repositório/projeto, usado para compor o path S3 dos scripts dos jobs Glue"
+  type        = string
+}
+
+variable "enable_extra_py_files" {
+  description = "habilita o input extra-py-files (utils.zip) nos jobs Glue — manter false até o utils.zip existir no repositório"
+  type        = bool
+  default     = false
 }

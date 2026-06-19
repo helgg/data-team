@@ -24,3 +24,8 @@ output "eventbridge_rule_arns" {
   description = "ARNs das regras EventBridge"
   value       = { for k, r in aws_cloudwatch_event_rule.this : k => r.arn }
 }
+
+output "glue_job_names" {
+  description = "nomes finais (AWS) dos jobs Glue, chaveados pela chave lógica do map var.glue_jobs"
+  value       = { for k, v in module.glue_jobs : k => v.glue_job_name }
+}

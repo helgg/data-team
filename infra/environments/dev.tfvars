@@ -28,6 +28,13 @@ state_bucket_name = "FILL_ME" # ex: "meu-projeto-terraform-state"
 owner_team_email = "FILL_ME" # ex: "squad-dados@empresa.com"
 tech_team_email  = "FILL_ME" # ex: "engenharia-dados@empresa.com"
 
+# AZ usada pela connection compartilhada do Glue
+availability_zone = "FILL_ME" # ex: "us-east-1a"
+
+# Nome do repositório/projeto — compõe o path S3 dos scripts dos jobs Glue
+# (s3://<glue_source_bucket>/<repository_name>/src/<script_file>)
+repository_name = "FILL_ME" # ex: "aws-infra"
+
 # ---------------------------------------------------------------------------
 # OPCIONAIS — defaults do variables.tf já aplicados; ajustar se necessário
 # ---------------------------------------------------------------------------
@@ -61,11 +68,6 @@ glue_db = "" # ex: "db_raw" — Glue database de origem
 pipeline_1_table = "" # ex: "tb_eventos_raw"
 pipeline_2_table = "" # ex: "tb_eventos_trusted"
 
-glue_main_job_name     = "" # ex: "job-ingestao-principal"
-glue_heimdall_job_name = "" # ex: "job-heimdall-dq"
-glue_hermes_job_name   = "" # ex: "job-hermes-delivery"
-glue_repair_job_name   = "" # ex: "job-repair-iceberg"
-
 region_name    = "" # ex: "us-east-1" — região dos recursos Glue
 partition_name = "" # ex: "dt" — nome da coluna de partição
 partition_type = "" # ex: "date" — tipo da partição (date, string, etc.)
@@ -75,3 +77,83 @@ members     = "" # ex: "user1@empresa.com,user2@empresa.com" — membros adicion
 group_name  = "" # ex: "squad-dados" — grupo de notificação
 
 ignore_partitions_tb_name = "" # ex: "tb_ignore_partitions" — tabela de controle de partições ignoradas
+
+# ---------------------------------------------------------------------------
+# Buckets usados pelos jobs Glue (deixar "" para usar o default composto a
+# partir de name_prefix em locals.tf, ex: "FILL_ME-dev-glue-source")
+# ---------------------------------------------------------------------------
+
+glue_source_bucket_name = "" # ex: "meu-projeto-dev-glue-source"
+glue_stage_bucket_name  = "" # ex: "meu-projeto-dev-glue-stage"
+glue_backup_bucket_name = "" # ex: "meu-projeto-dev-glue-backup"
+glue_target_bucket_name = "" # ex: "meu-projeto-dev-glue-target"
+athena_output_bucket    = "" # ex: "meu-projeto-dev-athena-results"
+
+# ---------------------------------------------------------------------------
+# Glue jobs — auto-discovery: cada chave corresponde a um arquivo .py em
+# app/src/ (script_file). O nome real do job AWS vem sempre de glue_job_name,
+# nunca da chave do map. Valores abaixo são de EXEMPLO/DEV — ajustar antes do
+# primeiro deploy real.
+# ---------------------------------------------------------------------------
+
+glue_jobs = {
+  main = {
+    glue_job_name              = "Yggdra"
+    script_file                = "main.py"
+    glue_job_description       = "Job principal de orquestração Yggdra (stub dev)"
+    source_database            = "workspace_db"
+    source_table               = "sepj_sot_ga4_perfis_operadores"
+    conversion_mode            = "MERGE"
+    save_method                = "OVERWRITE"
+    workgroup                  = "primary"
+    glue_job_worker_type       = "G.1X"
+    glue_job_number_of_workers = 2
+    glue_job_timeout           = 60
+    glue_job_max_retries       = 0
+  }
+
+  heimdall = {
+    glue_job_name              = "YGGDRA - Heimdall"
+    script_file                = "heimdall.py"
+    glue_job_description       = "Job de data quality/monitoramento Heimdall (stub dev)"
+    source_database            = "workspace_db"
+    source_table               = "sepj_sot_ga4_perfis_operadores"
+    conversion_mode            = "INSERT_INTO"
+    save_method                = "APPEND"
+    workgroup                  = "primary"
+    glue_job_worker_type       = "G.1X"
+    glue_job_number_of_workers = 2
+    glue_job_timeout           = 30
+    glue_job_max_retries       = 0
+  }
+
+  hermes = {
+    glue_job_name              = "Yggdra_Hermes"
+    script_file                = "hermes.py"
+    glue_job_description       = "Job de entrega/delivery Hermes (stub dev)"
+    source_database            = "workspace_db"
+    source_table               = "sepj_spec_ga4_perfis_operadores_analitica"
+    conversion_mode            = "INSERT_INTO"
+    save_method                = "APPEND"
+    workgroup                  = "primary"
+    glue_job_worker_type       = "G.1X"
+    glue_job_number_of_workers = 2
+    glue_job_timeout           = 30
+    glue_job_max_retries       = 0
+  }
+
+  repair_table_perfis_operadores_iam = {
+    glue_job_name              = "repair_table_perfis_operadores_iam"
+    script_file                = "repair_table_perfis_operadores_iam.py"
+    glue_job_description       = "Job de manutenção/repair de partições Iceberg (stub dev)"
+    source_database            = "workspace_db"
+    source_table               = "sepj_sot_ga4_perfis_operadores"
+    conversion_mode            = "OVERWRITE"
+    save_method                = "OVERWRITE"
+    workgroup                  = "primary"
+    glue_job_worker_type       = "G.1X"
+    glue_job_number_of_workers = 2
+    glue_job_timeout           = 30
+    glue_job_max_retries       = 0
+  }
+}
